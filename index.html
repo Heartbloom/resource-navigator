@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Navigator</title>
+<style>
+  :root {
+    --bg:      #faf9f7;
+    --surface: #ffffff;
+    --border:  #e4e0da;
+    --text:    #2c2825;
+    --muted:   #7a736b;
+    --accent:  #c06b3a;
+    --green:   #3d6b4f;
+    --green-l: #e6f0ea;
+    --radius:  10px;
+    --shadow:  0 2px 12px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1rem 5rem;
+  }
+
+  .wordmark {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    color: var(--muted);
+    margin-bottom: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+
+  .hero {
+    max-width: 560px;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: .75rem;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    max-width: 600px;
+    width: 100%;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 500px) {
+    .cards { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.6rem; }
+  }
+
+  .nav-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.75rem 1.5rem;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    transition: box-shadow .15s, border-color .15s, transform .1s;
+  }
+  .nav-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.11);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .card-icon {
+    font-size: 1.8rem;
+    margin-bottom: .75rem;
+    display: block;
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: .4rem;
+  }
+  .card-desc {
+    font-size: .875rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .card-cta {
+    display: inline-block;
+    margin-top: .9rem;
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .how-it-works {
+    max-width: 560px;
+    width: 100%;
+    margin-bottom: 3rem;
+  }
+  .section-label {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    font-size: .9rem;
+  }
+  .step-num {
+    font-size: .8rem;
+    font-weight: 800;
+    color: var(--accent);
+    background: #f5ede6;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-text { line-height: 1.5; color: var(--muted); }
+  .step-text strong { color: var(--text); }
+
+  footer {
+    font-size: .8rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.7;
+    max-width: 400px;
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="wordmark">Resource Navigator</div>
+
+<div class="hero">
+  <h1>Find housing help<br><span>that actually fits.</span></h1>
+  <p>We check each program's real eligibility requirements against your situation
+     and tell you exactly what to say when you call.
+     No accounts. No judgment. Anyone can use this.</p>
+</div>
+
+<div class="cards">
+  <a class="nav-card" href="search.html">
+    <span class="card-icon">🔍</span>
+    <div class="card-title">Find matching programs</div>
+    <div class="card-desc">Answer a few questions about your situation. We'll check every program and rank what you're likely to qualify for.</div>
+    <span class="card-cta">Search →</span>
+  </a>
+  <a class="nav-card" href="update.html">
+    <span class="card-icon">📋</span>
+    <div class="card-title">Update a program</div>
+    <div class="card-desc">Recently called somewhere? Share what you found out — intake status, who they're accepting, wait times. Helps the next person.</div>
+    <span class="card-cta">Update →</span>
+  </a>
+</div>
+
+<div class="how-it-works">
+  <div class="section-label">How it works</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>You describe your situation.</strong> Household size, income range, urgency, what's going on. Nothing is stored or tied to your identity.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>We read every program's actual eligibility requirements</strong> — not just the category label — and evaluate each one against what you told us.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>You get a ranked list</strong> with the most likely matches first, plus a call script for each one — the actual words to say so you don't have to figure it out on the phone.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text"><strong>The list stays current</strong> because people who've called these programs share what they found — intake status, wait times, who's actually being accepted right now.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Immigration status is never required to use this tool.<br>
+  Information in your area but not finding it here?
+  <a href="update.html">Add what you know.</a>
+</footer>
+
+</body>
+</html>

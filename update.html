@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Navigator — Update a Program</title>
+<style>
+  :root {
+    --bg:       #faf9f7;
+    --surface:  #ffffff;
+    --border:   #e4e0da;
+    --text:     #2c2825;
+    --muted:    #7a736b;
+    --accent:   #c06b3a;
+    --accent-l: #f5ede6;
+    --green:    #4a7c59;
+    --green-l:  #e8f2eb;
+    --radius:   10px;
+    --shadow:   0 2px 12px rgba(0,0,0,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  header {
+    max-width: 620px;
+    margin: 0 auto 2rem;
+  }
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  header p {
+    margin-top: .4rem;
+    color: var(--muted);
+    font-size: .95rem;
+    line-height: 1.5;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 620px;
+    margin: 0 auto 1.5rem;
+    padding: 1.5rem;
+  }
+
+  label.field-label {
+    display: block;
+    font-weight: 600;
+    font-size: .9rem;
+    margin-bottom: .5rem;
+    color: var(--text);
+  }
+  .hint {
+    font-size: .82rem;
+    color: var(--muted);
+    margin-top: -.3rem;
+    margin-bottom: .7rem;
+  }
+
+  select, textarea, input[type="text"] {
+    width: 100%;
+    padding: .65rem .8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .95rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color .15s;
+  }
+  select:focus, textarea:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* Radio / checkbox groups */
+  .option-group {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-top: .25rem;
+  }
+  .option-group.horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .55rem .85rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .92rem;
+    transition: background .12s, border-color .12s;
+    user-select: none;
+  }
+  .opt:hover { background: var(--accent-l); border-color: var(--accent); }
+  .opt input { accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+  .opt.selected { background: var(--accent-l); border-color: var(--accent); }
+
+  /* Section divider */
+  .section-title {
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: .9rem;
+  }
+
+  /* Current state badge */
+  .current-state {
+    background: var(--accent-l);
+    border: 1px solid #e8c4a8;
+    border-radius: 6px;
+    padding: .6rem .9rem;
+    font-size: .86rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .current-state strong { color: var(--accent); }
+
+  /* Field sections inside card */
+  .field-section {
+    margin-bottom: 1.4rem;
+  }
+  .field-section:last-child { margin-bottom: 0; }
+
+  /* Separator */
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+
+  /* Submit button */
+  .btn-submit {
+    width: 100%;
+    padding: .85rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+    margin-top: .5rem;
+  }
+  .btn-submit:hover { opacity: .9; }
+  .btn-submit:active { transform: scale(.98); }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Success state */
+  #success {
+    display: none;
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+  }
+  .success-icon {
+    font-size: 2.8rem;
+    margin-bottom: .8rem;
+  }
+  #success h2 {
+    font-size: 1.25rem;
+    margin-bottom: .5rem;
+  }
+  #success .gm-message {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: .4rem;
+  }
+  #success .gm-stats {
+    font-size: .88rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  .btn-again {
+    padding: .65rem 1.6rem;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-again:hover { opacity: .88; }
+
+  .error-msg {
+    color: #b94040;
+    font-size: .88rem;
+    margin-top: .5rem;
+    display: none;
+  }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+    margin-right: .4rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-msg {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem;
+    font-size: .95rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Update a Resource</h1>
+  <p>If you recently called, emailed, or visited a program — share what you found out.
+     Takes under a minute. Helps the next person skip the calls you already made.</p>
+</header>
+
+<!-- Loading state -->
+<div id="loading" class="loading-msg">Loading programs…</div>
+
+<!-- Form -->
+<div id="form-wrap" style="display:none">
+
+  <!-- Step 1: Program -->
+  <div class="card">
+    <div class="section-title">Which program did you contact?</div>
+    <div class="field-section">
+      <label class="field-label" for="program-select">Program</label>
+      <select id="program-select">
+        <option value="">— select a program —</option>
+      </select>
+    </div>
+    <div id="current-state-box" class="current-state"></div>
+  </div>
+
+  <!-- Step 2: What did you find out -->
+  <div class="card" id="update-card" style="display:none">
+    <div class="section-title">What did you find out?</div>
+
+    <!-- Intake status -->
+    <div class="field-section">
+      <label class="field-label">Is intake currently open?</label>
+      <div class="option-group" id="intake-opts">
+        <label class="opt"><input type="radio" name="intake_status" value="open"> Open — accepting applications now</label>
+        <label class="opt"><input type="radio" name="intake_status" value="waitlist_only"> Waitlist only</label>
+        <label class="opt"><input type="radio" name="intake_status" value="by_referral_only"> By referral only</label>
+        <label class="opt"><input type="radio" name="intake_status" value="closed"> Closed — not accepting</label>
+        <label class="opt"><input type="radio" name="intake_status" value="call_first"> Call first to check</label>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Who they're accepting -->
+    <div class="field-section">
+      <label class="field-label">Who are they currently accepting? <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <p class="hint">Check all that apply based on what you were told.</p>
+      <div class="option-group" id="serves-opts">
+        <label class="opt"><input type="checkbox" name="serves" value="families with children"> Families with children</label>
+        <label class="opt"><input type="checkbox" name="serves" value="single adults"> Single adults</label>
+        <label class="opt"><input type="checkbox" name="serves" value="veterans"> Veterans</label>
+        <label class="opt"><input type="checkbox" name="serves" value="DV survivors"> DV survivors</label>
+        <label class="opt"><input type="checkbox" name="serves" value="youth (18-24)"> Youth (18–24)</label>
+        <label class="opt"><input type="checkbox" name="serves" value="LGBTQ+"> LGBTQ+</label>
+        <label class="opt"><input type="checkbox" name="serves" value="immigrants"> Immigrants</label>
+        <label class="opt"><input type="checkbox" name="serves" value="seniors"> Seniors (60+)</label>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Immigration -->
+    <div class="field-section">
+      <label class="field-label">Do they ask about immigration status? <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <div class="option-group horizontal" id="immigration-opts">
+        <label class="opt"><input type="radio" name="immigration_agnostic" value="yes"> No — they don't ask</label>
+        <label class="opt"><input type="radio" name="immigration_agnostic" value="no"> Yes — status required</label>
+        <label class="opt"><input type="radio" name="immigration_agnostic" value="unknown"> Wasn't clear</label>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- Notes -->
+    <div class="field-section">
+      <label class="field-label" for="notes-field">Anything else worth noting? <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <p class="hint">Wait times, specific requirements, what to say when you call, anything that would help.</p>
+      <textarea id="notes-field" rows="3" placeholder="e.g. 6–8 week wait, case manager was helpful, ask for Maria…"></textarea>
+    </div>
+  </div>
+
+  <!-- Step 3: How you found out -->
+  <div class="card" id="method-card" style="display:none">
+    <div class="section-title">How did you find this out?</div>
+
+    <div class="field-section">
+      <label class="field-label">You are… <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <div class="option-group horizontal" id="reporter-opts">
+        <label class="opt"><input type="radio" name="reporter_type" value="community_member"> Community member</label>
+        <label class="opt"><input type="radio" name="reporter_type" value="person_seeking"> Looking for help myself</label>
+        <label class="opt"><input type="radio" name="reporter_type" value="social_worker"> Social worker / case manager</label>
+        <label class="opt"><input type="radio" name="reporter_type" value="program_staff"> Program staff</label>
+      </div>
+    </div>
+
+    <div class="field-section">
+      <label class="field-label">How did you contact them? <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <div class="option-group horizontal" id="contact-opts">
+        <label class="opt"><input type="radio" name="contact_method" value="phone"> Called</label>
+        <label class="opt"><input type="radio" name="contact_method" value="email"> Emailed</label>
+        <label class="opt"><input type="radio" name="contact_method" value="walk_in"> Went in person</label>
+        <label class="opt"><input type="radio" name="contact_method" value="website"> Checked website</label>
+      </div>
+    </div>
+
+    <p id="error-msg" class="error-msg"></p>
+    <button class="btn-submit" id="submit-btn" disabled>Submit update</button>
+  </div>
+
+</div><!-- /form-wrap -->
+
+<!-- Success -->
+<div id="success">
+  <div class="success-icon">✦</div>
+  <h2 id="success-heading">Update received.</h2>
+  <p class="gm-message" id="gm-message"></p>
+  <p class="gm-stats" id="gm-stats"></p>
+  <button class="btn-again" onclick="resetForm()">Update another program</button>
+</div>
+
+<script>
+// When opened as a file:// (local dev double-click), hit localhost.
+// When served by Flask (local or deployed), use relative URLs.
+const API = window.location.protocol === 'file:' ? 'http://localhost:5000' : '';
+
+// Anonymous session ID — lives in memory for this page visit
+const SESSION_ID = crypto.randomUUID ? crypto.randomUUID()
+  : 'xxxx-xxxx-xxxx'.replace(/x/g, () => Math.random().toString(16)[2]);
+
+let programs = [];
+let selectedProgramId = null;
+
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+
+async function loadPrograms() {
+  try {
+    const r = await fetch(`${API}/programs`);
+    programs = await r.json();
+    const sel = document.getElementById('program-select');
+    programs.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('form-wrap').style.display = 'block';
+  } catch(e) {
+    document.getElementById('loading').textContent =
+      'Could not connect to the API. Make sure app.py is running on localhost:5000.';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Program selection
+// ---------------------------------------------------------------------------
+
+document.getElementById('program-select').addEventListener('change', function() {
+  selectedProgramId = this.value ? parseInt(this.value) : null;
+  const updateCard = document.getElementById('update-card');
+  const methodCard = document.getElementById('method-card');
+
+  if (!selectedProgramId) {
+    updateCard.style.display = 'none';
+    methodCard.style.display = 'none';
+    document.getElementById('current-state-box').style.display = 'none';
+    return;
+  }
+
+  // Show current community-reported state
+  const p = programs.find(x => x.id === selectedProgramId);
+  showCurrentState(p);
+
+  updateCard.style.display = 'block';
+  methodCard.style.display = 'block';
+  checkSubmitReady();
+});
+
+function showCurrentState(p) {
+  const box = document.getElementById('current-state-box');
+  const cu = p.community_updates || {};
+
+  if (!Object.keys(cu).length) {
+    box.style.display = 'none';
+    return;
+  }
+
+  const lines = [];
+  if (cu.intake_status) {
+    const age = timeSince(cu.intake_status.submitted_at);
+    const conf = Math.round(cu.intake_status.confidence * 100);
+    lines.push(`<strong>Intake:</strong> ${cu.intake_status.value} — reported ${age}, ${conf}% confidence`);
+    if (cu.intake_status.notes) lines.push(`<em>${cu.intake_status.notes}</em>`);
+  }
+  if (cu.serves) lines.push(`<strong>Currently serving:</strong> ${cu.serves.value}`);
+  if (cu.immigration_agnostic)
+    lines.push(`<strong>Immigration:</strong> ${cu.immigration_agnostic.value === 'yes' ? "doesn't ask" : "status required"}`);
+
+  box.innerHTML = '📋 Last reported: ' + lines.join(' · ');
+  box.style.display = 'block';
+}
+
+function timeSince(isoStr) {
+  const diff = (Date.now() - new Date(isoStr + 'Z').getTime()) / 60000;
+  if (diff < 60) return `${Math.round(diff)}m ago`;
+  if (diff < 1440) return `${Math.round(diff/60)}h ago`;
+  return `${Math.round(diff/1440)}d ago`;
+}
+
+// ---------------------------------------------------------------------------
+// Highlight selected options visually
+// ---------------------------------------------------------------------------
+
+document.querySelectorAll('.option-group').forEach(group => {
+  group.addEventListener('change', e => {
+    const isRadio = e.target.type === 'radio';
+    if (isRadio) {
+      // Deselect siblings in same group
+      group.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+    }
+    e.target.closest('.opt').classList.toggle('selected', e.target.checked);
+    checkSubmitReady();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Enable submit once program + at least intake status chosen
+// ---------------------------------------------------------------------------
+
+function checkSubmitReady() {
+  const hasProgram = !!selectedProgramId;
+  const hasIntake = !!document.querySelector('input[name="intake_status"]:checked');
+  document.getElementById('submit-btn').disabled = !(hasProgram && hasIntake);
+}
+
+// ---------------------------------------------------------------------------
+// Submit
+// ---------------------------------------------------------------------------
+
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('submit-btn');
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sending…';
+
+  const intakeVal = document.querySelector('input[name="intake_status"]:checked')?.value;
+  const servesChecked = [...document.querySelectorAll('input[name="serves"]:checked')].map(x => x.value);
+  const immigrationVal = document.querySelector('input[name="immigration_agnostic"]:checked')?.value;
+  const reporterType = document.querySelector('input[name="reporter_type"]:checked')?.value || 'anonymous';
+  const contactMethod = document.querySelector('input[name="contact_method"]:checked')?.value;
+  const notes = document.getElementById('notes-field').value.trim();
+
+  // Build array of updates to submit (one per field)
+  const updates = [];
+
+  if (intakeVal) {
+    updates.push({
+      program_id: selectedProgramId,
+      field_name: 'intake_status',
+      new_value: intakeVal,
+      reporter_type: reporterType,
+      contact_method_used: contactMethod || null,
+      notes: notes || null,
+      session_id: SESSION_ID,
+    });
+  }
+
+  if (servesChecked.length) {
+    updates.push({
+      program_id: selectedProgramId,
+      field_name: 'serves',
+      new_value: servesChecked.join(', '),
+      reporter_type: reporterType,
+      contact_method_used: contactMethod || null,
+      session_id: SESSION_ID,
+    });
+  }
+
+  if (immigrationVal) {
+    updates.push({
+      program_id: selectedProgramId,
+      field_name: 'immigration_agnostic',
+      new_value: immigrationVal,
+      reporter_type: reporterType,
+      contact_method_used: contactMethod || null,
+      session_id: SESSION_ID,
+    });
+  }
+
+  // If only notes and no other fields, submit as general note
+  if (updates.length === 0 && notes) {
+    updates.push({
+      program_id: selectedProgramId,
+      field_name: 'general',
+      new_value: notes,
+      reporter_type: reporterType,
+      contact_method_used: contactMethod || null,
+      session_id: SESSION_ID,
+    });
+  }
+
+  try {
+    let lastResult = null;
+    for (const payload of updates) {
+      const r = await fetch(`${API}/update`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload),
+      });
+      lastResult = await r.json();
+      if (!r.ok) throw new Error(lastResult.error || 'Server error');
+    }
+
+    // Show success
+    const gm = lastResult?.gamification || {};
+    document.getElementById('gm-message').textContent = gm.message || 'Update saved.';
+    document.getElementById('gm-stats').textContent =
+      `${gm.community_updates_total} updates total from the community.`;
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('success').style.display = 'block';
+
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Submit update';
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Reset
+// ---------------------------------------------------------------------------
+
+function resetForm() {
+  document.getElementById('program-select').value = '';
+  document.querySelectorAll('input[type="radio"], input[type="checkbox"]')
+    .forEach(i => i.checked = false);
+  document.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+  document.getElementById('notes-field').value = '';
+  document.getElementById('update-card').style.display = 'none';
+  document.getElementById('method-card').style.display = 'none';
+  document.getElementById('current-state-box').style.display = 'none';
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('success').style.display = 'none';
+  document.getElementById('form-wrap').style.display = 'block';
+  selectedProgramId = null;
+}
+
+// ---------------------------------------------------------------------------
+
+loadPrograms();
+</script>
+</body>
+</html>

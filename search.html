@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resource Navigator — Find Help</title>
+<style>
+  :root {
+    --bg:       #faf9f7;
+    --surface:  #ffffff;
+    --border:   #e4e0da;
+    --text:     #2c2825;
+    --muted:    #7a736b;
+    --accent:   #c06b3a;
+    --accent-l: #f5ede6;
+    --green:    #3d6b4f;
+    --green-l:  #e6f0ea;
+    --amber:    #8a6a1a;
+    --amber-l:  #fdf4dc;
+    --gray-l:   #f0eeec;
+    --radius:   10px;
+    --shadow:   0 2px 12px rgba(0,0,0,0.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  header { max-width: 640px; margin: 0 auto 2rem; }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  header p  { margin-top: .4rem; color: var(--muted); font-size: .95rem; line-height: 1.5; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: 640px;
+    margin: 0 auto 1.5rem;
+    padding: 1.5rem;
+  }
+  .section-title {
+    font-size: .8rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted); margin-bottom: 1rem;
+  }
+  .field-section { margin-bottom: 1.25rem; }
+  .field-section:last-child { margin-bottom: 0; }
+  label.field-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: .45rem; }
+  .hint { font-size: .82rem; color: var(--muted); margin-top: -.25rem; margin-bottom: .55rem; }
+
+  select, input[type="text"], input[type="number"], textarea {
+    width: 100%; padding: .65rem .8rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    font-size: .95rem; font-family: inherit; color: var(--text);
+    background: var(--bg); transition: border-color .15s;
+  }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 480px) { .two-col { grid-template-columns: 1fr; } }
+
+  .option-group { display: flex; flex-direction: column; gap: .45rem; margin-top: .2rem; }
+  .option-group.wrap { flex-direction: row; flex-wrap: wrap; gap: .45rem; }
+  .opt {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .5rem .8rem; border: 1px solid var(--border);
+    border-radius: 6px; cursor: pointer; font-size: .9rem;
+    transition: background .12s, border-color .12s; user-select: none;
+  }
+  .opt:hover { background: var(--accent-l); border-color: var(--accent); }
+  .opt input { accent-color: var(--accent); width: 15px; height: 15px; flex-shrink: 0; }
+  .opt.selected { background: var(--accent-l); border-color: var(--accent); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+
+  .btn-submit {
+    width: 100%; padding: .9rem;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: opacity .15s; margin-top: .25rem;
+  }
+  .btn-submit:hover { opacity: .9; }
+  .btn-submit:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ── Loading ── */
+  #loading-state {
+    display: none; max-width: 640px; margin: 0 auto;
+    text-align: center; padding: 3rem 1.5rem;
+  }
+  .loading-ring {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1.2rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-state h2 { font-size: 1.15rem; margin-bottom: .5rem; }
+  #loading-msg { color: var(--muted); font-size: .92rem; line-height: 1.6; }
+  .loading-steps { margin-top: 1.2rem; text-align: left; max-width: 320px; margin-left: auto; margin-right: auto; }
+  .loading-step {
+    display: flex; align-items: center; gap: .6rem;
+    font-size: .85rem; color: var(--muted); padding: .3rem 0;
+    transition: color .3s;
+  }
+  .loading-step.active { color: var(--accent); font-weight: 600; }
+  .loading-step .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); flex-shrink: 0; transition: background .3s;
+  }
+  .loading-step.active .dot { background: var(--accent); }
+  .loading-step.done .dot { background: var(--green); }
+  .loading-step.done { color: var(--green); }
+
+  /* ── Results ── */
+  #results-section { display: none; max-width: 640px; margin: 0 auto; }
+  #results-section h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; }
+
+  .result-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    margin-bottom: 1rem; overflow: hidden;
+  }
+  .result-header {
+    padding: 1rem 1.25rem .75rem;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  }
+  .result-name { font-weight: 700; font-size: 1rem; line-height: 1.3; }
+  .result-contact { font-size: .82rem; color: var(--muted); margin-top: .25rem; }
+  .badge {
+    font-size: .75rem; font-weight: 700; padding: .3rem .65rem;
+    border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-likely   { background: var(--green-l); color: var(--green); }
+  .badge-verify   { background: var(--amber-l); color: var(--amber); }
+  .badge-call     { background: var(--gray-l);  color: var(--muted); }
+  .badge-unlikely { display: none; }
+
+  .result-body { padding: 0 1.25rem 1.25rem; }
+
+  .call-script-box {
+    background: var(--green-l); border: 1px solid #b8d9c4;
+    border-radius: 7px; padding: .9rem 1rem; margin-bottom: .85rem;
+  }
+  .call-script-label {
+    font-size: .75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--green); margin-bottom: .45rem;
+  }
+  .call-script-text { font-size: .9rem; line-height: 1.6; }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    margin-top: .6rem; padding: .35rem .75rem;
+    font-size: .8rem; font-weight: 600; color: var(--green);
+    background: transparent; border: 1px solid #b8d9c4;
+    border-radius: 5px; cursor: pointer; transition: background .12s;
+  }
+  .copy-btn:hover { background: #d4ebdc; }
+
+  .flags-list { margin-top: .5rem; }
+  .flag-item {
+    font-size: .83rem; color: var(--amber); display: flex;
+    gap: .4rem; align-items: flex-start; padding: .2rem 0;
+  }
+  .flag-item::before { content: "⚑"; flex-shrink: 0; }
+
+  .reqs-toggle {
+    font-size: .82rem; color: var(--muted); cursor: pointer;
+    background: none; border: none; padding: .3rem 0;
+    display: flex; align-items: center; gap: .3rem; margin-top: .4rem;
+  }
+  .reqs-toggle:hover { color: var(--accent); }
+  .reqs-list { display: none; margin-top: .6rem; }
+  .req-row {
+    display: grid; grid-template-columns: auto 1fr;
+    gap: .4rem .7rem; font-size: .83rem;
+    padding: .35rem 0; border-top: 1px solid var(--border);
+    align-items: start;
+  }
+  .req-tag {
+    font-size: .72rem; font-weight: 700; padding: .15rem .45rem;
+    border-radius: 4px; white-space: nowrap; margin-top: .1rem;
+  }
+  .req-tag.meets     { background: var(--green-l); color: var(--green); }
+  .req-tag.unclear   { background: var(--amber-l); color: var(--amber); }
+  .req-tag.not-meet  { background: #fde8e8; color: #a33; }
+  .req-tag.unverif   { background: var(--gray-l);  color: var(--muted); }
+
+  .call-section { margin-top: .75rem; }
+  .call-section .contact-link {
+    font-size: .88rem; color: var(--accent); text-decoration: none; font-weight: 600;
+  }
+  .call-section .contact-link:hover { text-decoration: underline; }
+  .intake-hours { font-size: .82rem; color: var(--muted); margin-top: .2rem; }
+
+  .no-results {
+    text-align: center; padding: 2rem; color: var(--muted); font-size: .95rem;
+  }
+  .btn-again {
+    display: block; margin: 1.5rem auto 0; padding: .7rem 1.8rem;
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    font-size: .95rem; font-weight: 600; cursor: pointer; text-align: center;
+  }
+  .btn-again:hover { opacity: .88; }
+
+  .error-banner {
+    background: #fde8e8; border: 1px solid #f5b8b8; border-radius: 8px;
+    padding: 1rem 1.25rem; color: #a33; font-size: .9rem;
+    max-width: 640px; margin: 0 auto 1rem; display: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Find Resources</h1>
+  <p>Answer a few questions about your situation. We'll check every program
+     and tell you which ones you're likely to qualify for — and exactly what to say when you call.</p>
+</header>
+
+<!-- Form -->
+<div id="form-section">
+  <div class="card">
+    <div class="section-title">Your situation</div>
+
+    <div class="field-section two-col">
+      <div>
+        <label class="field-label" for="location">City / county</label>
+        <input type="text" id="location" value="San Francisco, CA" placeholder="San Francisco, CA">
+      </div>
+      <div>
+        <label class="field-label" for="urgency">How urgent?</label>
+        <select id="urgency">
+          <option value="days">Days — immediate crisis</option>
+          <option value="weeks" selected>Weeks — eviction / notice</option>
+          <option value="months">Months — planning ahead</option>
+        </select>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="field-section two-col">
+      <div>
+        <label class="field-label" for="household-size">Household size</label>
+        <input type="number" id="household-size" min="1" max="12" value="1" placeholder="1">
+      </div>
+      <div>
+        <label class="field-label" for="monthly-income">Approx. monthly income</label>
+        <input type="text" id="monthly-income" placeholder="e.g. $2,500/mo or unknown">
+      </div>
+    </div>
+
+    <div class="field-section">
+      <label class="field-label">Children in household?</label>
+      <div class="option-group wrap" id="children-opts">
+        <label class="opt"><input type="radio" name="children" value="none" checked> No children</label>
+        <label class="opt"><input type="radio" name="children" value="yes — minor children under 18"> Yes — under 18</label>
+        <label class="opt"><input type="radio" name="children" value="yes — children 18+"> Yes — 18 or older</label>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="field-section">
+      <label class="field-label">Which of these apply to your situation?</label>
+      <p class="hint">Check everything that applies. More detail = better matches.</p>
+      <div class="option-group" id="circumstances-opts">
+        <label class="opt"><input type="checkbox" value="facing eviction"> Facing eviction or have received a notice</label>
+        <label class="opt"><input type="checkbox" value="currently homeless"> Currently without housing</label>
+        <label class="opt"><input type="checkbox" value="DV survivor"> Fleeing domestic violence or unsafe living situation</label>
+        <label class="opt"><input type="checkbox" value="veteran"> Veteran</label>
+        <label class="opt"><input type="checkbox" value="immigrant"> Immigrant (documentation status shouldn't matter — we flag immigration-agnostic programs)</label>
+        <label class="opt"><input type="checkbox" value="single parent"> Single parent</label>
+        <label class="opt"><input type="checkbox" value="employed full-time"> Employed full-time</label>
+        <label class="opt"><input type="checkbox" value="disability"> Living with a disability</label>
+        <label class="opt"><input type="checkbox" value="authorized occupant / subtenant"> On the lease as occupant or subtenant, not primary tenant</label>
+        <label class="opt"><input type="checkbox" value="senior (60+)"> Senior (60+)</label>
+        <label class="opt"><input type="checkbox" value="youth (18-24)"> Youth (18–24)</label>
+        <label class="opt"><input type="checkbox" value="LGBTQ+"> LGBTQ+</label>
+      </div>
+    </div>
+
+    <div class="field-section">
+      <label class="field-label" for="context">Anything else that might matter?</label>
+      <p class="hint">Specific details help the matching be more accurate — lease situation, back rent, prior applications, anything unusual.</p>
+      <textarea id="context" rows="3" placeholder="e.g. Landlord has refused rent payments since 2022. Not on original lease. Have ~$20k savings. One pet."></textarea>
+    </div>
+  </div>
+
+  <div class="card" style="padding: 1.25rem 1.5rem;">
+    <p style="font-size:.88rem;color:var(--muted);margin-bottom:.9rem;">
+      Matching checks each program carefully and takes <strong>5–10 minutes</strong>.
+      Nothing you enter is stored — this runs anonymously.
+    </p>
+    <button class="btn-submit" id="submit-btn">Find matching programs</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="loading-state">
+  <div class="loading-ring"></div>
+  <h2>Checking programs…</h2>
+  <p id="loading-msg">Reading each program's eligibility requirements against your situation.<br>This takes 5–10 minutes. Please keep this page open.</p>
+  <div class="loading-steps">
+    <div class="loading-step active" id="step-0"><span class="dot"></span>Reading eligibility requirements</div>
+    <div class="loading-step" id="step-1"><span class="dot"></span>Evaluating income &amp; household criteria</div>
+    <div class="loading-step" id="step-2"><span class="dot"></span>Checking documentation requirements</div>
+    <div class="loading-step" id="step-3"><span class="dot"></span>Flagging unclear requirements</div>
+    <div class="loading-step" id="step-4"><span class="dot"></span>Writing call scripts for likely programs</div>
+    <div class="loading-step" id="step-5"><span class="dot"></span>Ranking results</div>
+  </div>
+</div>
+
+<!-- Error -->
+<div class="error-banner" id="error-banner"></div>
+
+<!-- Results -->
+<div id="results-section">
+  <h2 id="results-heading"></h2>
+  <div id="results-container"></div>
+  <button class="btn-again" onclick="resetForm()">Search again</button>
+</div>
+
+<script>
+// When opened as a file:// (local dev double-click), hit localhost.
+// When served by Flask (local or deployed), use relative URLs.
+const API = window.location.protocol === 'file:' ? 'http://localhost:5000' : '';
+
+// ── Visual selection on option clicks ─────────────────────────────────────
+
+document.querySelectorAll('.option-group').forEach(group => {
+  group.addEventListener('change', e => {
+    if (e.target.type === 'radio') {
+      group.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+    }
+    e.target.closest('.opt').classList.toggle('selected', e.target.checked);
+  });
+});
+
+// Mark default radio
+document.querySelectorAll('input[type="radio"]:checked').forEach(r =>
+  r.closest('.opt')?.classList.add('selected')
+);
+
+// ── Loading step animation ─────────────────────────────────────────────────
+
+let stepInterval = null;
+function startLoadingAnimation() {
+  let current = 0;
+  const steps = document.querySelectorAll('.loading-step');
+  // Estimated total: 10 min = 600s, 6 steps = ~100s each
+  const STEP_MS = 90000;
+
+  stepInterval = setInterval(() => {
+    if (current < steps.length) steps[current].classList.add('done');
+    current++;
+    if (current < steps.length) {
+      steps[current].classList.add('active');
+    } else {
+      clearInterval(stepInterval);
+    }
+  }, STEP_MS);
+}
+
+function stopLoadingAnimation() {
+  if (stepInterval) clearInterval(stepInterval);
+  document.querySelectorAll('.loading-step').forEach(s => {
+    s.classList.add('done');
+    s.classList.remove('active');
+  });
+}
+
+// ── Build person payload ───────────────────────────────────────────────────
+
+function buildPerson() {
+  const circumstances = [...document.querySelectorAll('#circumstances-opts input:checked')]
+    .map(x => x.value);
+  const children = document.querySelector('input[name="children"]:checked')?.value || 'unknown';
+
+  return {
+    location: document.getElementById('location').value.trim() || 'San Francisco, CA',
+    urgency: document.getElementById('urgency').value,
+    household_size: parseInt(document.getElementById('household-size').value) || 1,
+    children: children === 'none' ? 'no' : children,
+    monthly_income: document.getElementById('monthly-income').value.trim() || 'unknown',
+    circumstances,
+    additional_context: document.getElementById('context').value.trim() || 'none provided',
+  };
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const person = buildPerson();
+  const errEl  = document.getElementById('error-banner');
+  errEl.style.display = 'none';
+
+  document.getElementById('form-section').style.display = 'none';
+  document.getElementById('loading-state').style.display = 'block';
+  startLoadingAnimation();
+
+  try {
+    const r = await fetch(`${API}/match`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(person),
+    });
+    const data = await r.json();
+
+    if (!r.ok) {
+      throw new Error(data.error || `Server error ${r.status}`);
+    }
+
+    stopLoadingAnimation();
+    document.getElementById('loading-state').style.display = 'none';
+    renderResults(data);
+
+  } catch(e) {
+    stopLoadingAnimation();
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('form-section').style.display = 'block';
+    errEl.textContent = `Something went wrong: ${e.message}. Make sure app.py is running.`;
+    errEl.style.display = 'block';
+  }
+});
+
+// ── Render results ─────────────────────────────────────────────────────────
+
+function renderResults(data) {
+  const container = document.getElementById('results-container');
+  const section   = document.getElementById('results-section');
+  container.innerHTML = '';
+
+  const actionable = data.results.filter(r =>
+    ['LIKELY', 'POSSIBLE — VERIFY', 'INSUFFICIENT DATA — CALL FIRST'].includes(r.overall)
+  );
+  const unlikely = data.results.filter(r => r.overall === 'UNLIKELY');
+
+  const likelyCount = data.results.filter(r => r.overall === 'LIKELY').length;
+  const verifyCount = data.results.filter(r => r.overall === 'POSSIBLE — VERIFY').length;
+  document.getElementById('results-heading').textContent =
+    `${likelyCount} likely match${likelyCount !== 1 ? 'es' : ''}, ${verifyCount} to verify — out of ${data.total_programs_checked} programs checked`;
+
+  if (actionable.length === 0 && unlikely.length === data.results.length) {
+    container.innerHTML = '<div class="no-results">No programs appear to be a clear match for this situation. Try adjusting your details or call 211 for additional options.</div>';
+  } else {
+    actionable.forEach(r => container.appendChild(buildCard(r)));
+  }
+
+  if (unlikely.length) {
+    const details = document.createElement('details');
+    details.style.cssText = 'max-width:640px;margin:0 auto 1rem;font-size:.85rem;color:var(--muted);';
+    const summ = document.createElement('summary');
+    summ.style.cssText = 'cursor:pointer;padding:.5rem 0;user-select:none;';
+    summ.textContent = `${unlikely.length} program${unlikely.length !== 1 ? 's' : ''} not a match — show anyway`;
+    details.appendChild(summ);
+    unlikely.forEach(r => {
+      const card = buildCard(r);
+      details.appendChild(card);
+    });
+    container.appendChild(details);
+  }
+
+  section.style.display = 'block';
+}
+
+function buildCard(r) {
+  const overall = r.overall || 'INSUFFICIENT DATA — CALL FIRST';
+  const card = document.createElement('div');
+  card.className = 'result-card';
+
+  // Badge class
+  let badgeClass = 'badge-call';
+  let badgeText  = 'Call first';
+  if (overall === 'LIKELY')              { badgeClass = 'badge-likely'; badgeText = 'Likely match'; }
+  else if (overall === 'POSSIBLE — VERIFY') { badgeClass = 'badge-verify'; badgeText = 'Verify'; }
+  else if (overall === 'UNLIKELY')       { badgeClass = 'badge-unlikely'; badgeText = 'Not a match'; }
+
+  // Contact
+  const contactRaw = r.contact || '';
+  const contactHtml = contactRaw.replace(
+    /(https?:\/\/[^\s]+)/g,
+    '<a class="contact-link" href="$1" target="_blank" rel="noopener">$1</a>'
+  ).replace(
+    /(\(?\d{3}\)?[\s\-]\d{3}[\s\-]\d{4})/g,
+    '<a class="contact-link" href="tel:$1">$1</a>'
+  );
+
+  card.innerHTML = `
+    <div class="result-header">
+      <div>
+        <div class="result-name">${esc(r.program_name || 'Unknown program')}</div>
+        ${contactHtml ? `<div class="result-contact">${contactHtml}</div>` : ''}
+        ${r.intake_hours ? `<div class="intake-hours">Hours: ${esc(r.intake_hours)}</div>` : ''}
+      </div>
+      <span class="badge ${badgeClass}">${badgeText}</span>
+    </div>
+    <div class="result-body" id="body-${safeId(r.program_name)}"></div>
+  `;
+
+  const body = card.querySelector('.result-body');
+
+  // Call script
+  if (r.call_script) {
+    const box = document.createElement('div');
+    box.className = 'call-script-box';
+    box.innerHTML = `
+      <div class="call-script-label">What to say when you call</div>
+      <div class="call-script-text">${esc(r.call_script)}</div>
+      <button class="copy-btn" onclick="copyScript(this, ${JSON.stringify(r.call_script)})">
+        Copy script
+      </button>
+    `;
+    body.appendChild(box);
+  }
+
+  // Error (length/parse issue)
+  if (r.error) {
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:.82rem;color:var(--muted);margin-bottom:.5rem;';
+    p.textContent = 'Full assessment unavailable — see contact info above to call directly.';
+    body.appendChild(p);
+  }
+
+  // Flags
+  if (r.flags && r.flags.length) {
+    const fl = document.createElement('div');
+    fl.className = 'flags-list';
+    r.flags.forEach(f => {
+      if (f.includes('Provider returned') || f.includes('JSON parse')) return;
+      const d = document.createElement('div');
+      d.className = 'flag-item';
+      d.textContent = f;
+      fl.appendChild(d);
+    });
+    if (fl.children.length) body.appendChild(fl);
+  }
+
+  // Requirements (collapsible)
+  if (r.requirements && r.requirements.length) {
+    const tog = document.createElement('button');
+    tog.className = 'reqs-toggle';
+    tog.innerHTML = '▸ Show how each requirement was evaluated';
+    const reqList = document.createElement('div');
+    reqList.className = 'reqs-list';
+
+    r.requirements.forEach(req => {
+      const evalLower = (req.evaluation || '').toLowerCase().replace(/\s+/g, '-').replace(/does-not/, 'not');
+      const tagClass = evalLower === 'meets' ? 'meets'
+                     : evalLower === 'unclear' ? 'unclear'
+                     : evalLower.includes('not') ? 'not-meet' : 'unverif';
+      const row = document.createElement('div');
+      row.className = 'req-row';
+      row.innerHTML = `
+        <span class="req-tag ${tagClass}">${esc(req.evaluation || '?')}</span>
+        <div>
+          <div style="font-weight:600;margin-bottom:.2rem">${esc(req.requirement || '')}</div>
+          ${req.reason ? `<div style="color:var(--muted)">${esc(req.reason)}</div>` : ''}
+          ${req.source_text ? `<div style="font-style:italic;font-size:.8rem;color:var(--muted);margin-top:.2rem">"${esc(req.source_text)}"</div>` : ''}
+        </div>
+      `;
+      reqList.appendChild(row);
+    });
+
+    tog.addEventListener('click', () => {
+      const open = reqList.style.display === 'block';
+      reqList.style.display = open ? 'none' : 'block';
+      tog.innerHTML = open ? '▸ Show how each requirement was evaluated'
+                           : '▾ Hide requirement details';
+    });
+
+    body.appendChild(tog);
+    body.appendChild(reqList);
+  }
+
+  return card;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function safeId(str) {
+  return String(str).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+}
+
+function copyScript(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = orig, 1800);
+  });
+}
+
+function resetForm() {
+  document.getElementById('results-section').style.display = 'none';
+  document.getElementById('form-section').style.display = 'block';
+  // Reset loading steps
+  document.querySelectorAll('.loading-step').forEach((s, i) => {
+    s.className = 'loading-step' + (i === 0 ? ' active' : '');
+  });
+}
+</script>
+</body>
+</html>
